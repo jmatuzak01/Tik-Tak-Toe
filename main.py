@@ -1,33 +1,57 @@
 import os, copy
 os.system("clear")
-valid_moves = [int(i) for i in range(1, 10)]
-moves_remaining = copy.deepcopy(valid_moves)
+START_OF_GAME = True
+VALID_MOVES = [int(i) for i in range(1, 10)]
+VALID_SYMBOLS = ["X", "O", "x", "o"]
+MOVES_REMAINING = copy.deepcopy(VALID_MOVES)
+START_BOARD = "|1|2|3|\n|4|5|6|\n|7|8|9|"
+GAME_BOARD = "|1|2|3|\n|4|5|6|\n|7|8|9|"
 
-def valid_response(response,valid_options=["X", "O", "x", "o"]):
+def start_game():
+    print("Welcome to Tic Tac Toe!")
+    player_symbol_choice = get_input("Choose your symbol (X/O): ", VALID_SYMBOLS)
+    print(f"You have chosen {player_symbol_choice}. The computer will be {'O' if player_symbol_choice == 'X' else 'X'}.")
+    return player_symbol_choice
+
+def valid_response(response,valid_options):
     if response in valid_options:
         return True
     else:
         print("Invalid input. Please try again.")
         return False
-print(f"valid moves: {valid_moves}")
+    
+def get_input(prompt, valid_options):
+    while True:
+        response = input(prompt)
+        if valid_response(response, valid_options):
+            return response.upper()
 
-player_symbol = input("Enter your symbol (X or O): ").upper()
+def update_board(move, symbol):
+    os.system("clear")
+    global GAME_BOARD
+    GAME_BOARD = GAME_BOARD.replace(str(move), symbol)
+    print(GAME_BOARD)
+    print(f"{symbol} was placed in position {move}.")
 
-while not valid_response(player_symbol):
-    player_symbol = input("Enter your symbol (X or O): ").upper()
-print(f"You chose: {player_symbol}")
+def computer_move():
+    # Placeholder for computer move logic
+    pass
 
-line1 = "|1|2|3|"
-line2 = "|4|5|6|"
-line3 = "|7|8|9|"
-print("\n".join([line1, line2, line3]))
-def get_player_move(moves_remaining):
-   while True:
-    try:
-        input_move = int(input(f"Choose a number to place your {player_symbol}.\nValid moves are {min(moves_remaining)} to {max(moves_remaining)}: "))
-        if input_move in moves_remaining:
-            return input_move
-    except ValueError:
-        print("Invalid input. Please enter a number.")
-player_move = get_player_move(moves_remaining)
-print(f"You chose move: {player_move}")
+def main():
+    global START_OF_GAME
+    if START_OF_GAME:
+        player_symbol = start_game()
+        if player_symbol == "X":
+            computer_symbol = "O"
+        else:
+            computer_symbol = "X"
+    START_OF_GAME = False
+    print(player_symbol)
+    
+    #move = get_input("Enter your move (1-9): ", valid_moves)
+    #updated_board = update_board(GAME_BOARD, move, player_symbol)
+    #print("\nUpdated board:")
+    #print(updated_board)
+
+if __name__ == "__main__":
+    main()
