@@ -6,6 +6,7 @@ VALID_SYMBOLS = ["X", "O", "x", "o"]
 MOVES_REMAINING = copy.deepcopy(VALID_MOVES)
 START_BOARD = "|1|2|3|\n|4|5|6|\n|7|8|9|"
 GAME_BOARD = "|1|2|3|\n|4|5|6|\n|7|8|9|"
+WHO_WON = {"have_won": False, "winner": None}
 
 def start_game():
     print("Welcome to Tic Tac Toe!")
@@ -29,12 +30,18 @@ def get_input(prompt, valid_options):
 def update_board(move, symbol):
     os.system("clear")
     global GAME_BOARD
+    global MOVES_REMAINING
     GAME_BOARD = GAME_BOARD.replace(str(move), symbol)
     print(GAME_BOARD)
+    MOVES_REMAINING.remove(int(move))
     print(f"{symbol} was placed in position {move}.")
 
-def computer_move():
+def computer_move(computer_symbol):
     # Placeholder for computer move logic
+    pass
+
+def check_win():
+    # Placeholder for win checking logic
     pass
 
 def main():
@@ -45,13 +52,18 @@ def main():
             computer_symbol = "O"
         else:
             computer_symbol = "X"
-    START_OF_GAME = False
-    print(player_symbol)
-    
-    #move = get_input("Enter your move (1-9): ", valid_moves)
-    #updated_board = update_board(GAME_BOARD, move, player_symbol)
-    #print("\nUpdated board:")
-    #print(updated_board)
+        first_player = "Player" if player_symbol == "X" else "Computer"
+        print(f"{first_player} will go first.")
+        START_OF_GAME = False
+    if first_player == "Player":
+        move = get_input(f"Enter your move ({MOVES_REMAINING}): ", MOVES_REMAINING)
+        update_board(move, player_symbol)
+    else:
+        computer_move(computer_symbol)
+    check_win()
+    if WHO_WON["have_won"]:
+        print(f"{WHO_WON['winner']} has won the game!")
+
 
 if __name__ == "__main__":
     main()
