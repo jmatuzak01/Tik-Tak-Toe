@@ -22,13 +22,18 @@ def valid_response(response,valid_options):
         return False
     
 def get_input(prompt, valid_options):
-    while True:
+    validated_response = False
+    while not validated_response:
         response = input(prompt)
         if valid_response(response, valid_options):
-            return response.upper()
+            validated_response = True
+    if response.isdigit():
+        return int(response)
+    else:
+        return response.upper()
 
 def update_board(move, symbol):
-    os.system("clear")
+    #os.system("clear")
     global GAME_BOARD
     global MOVES_REMAINING
     GAME_BOARD = GAME_BOARD.replace(str(move), symbol)
@@ -45,24 +50,26 @@ def check_win():
     pass
 
 def main():
-    global START_OF_GAME
-    if START_OF_GAME:
-        player_symbol = start_game()
-        if player_symbol == "X":
-            computer_symbol = "O"
+    first_player = None
+    while True:
+        global START_OF_GAME
+        if START_OF_GAME:
+            player_symbol = start_game()
+            if player_symbol == "X" or player_symbol == "x":
+                computer_symbol = "O"
+            else:
+                computer_symbol = "X"
+            first_player = "Player" if player_symbol == "X" else "Computer"
+            print(f"{first_player} will go first.")
+            START_OF_GAME = False
+        if first_player == "Player":
+            move = get_input(f"Enter your move ({MOVES_REMAINING}): ", MOVES_REMAINING)
+            update_board(move, player_symbol)
         else:
-            computer_symbol = "X"
-        first_player = "Player" if player_symbol == "X" else "Computer"
-        print(f"{first_player} will go first.")
-        START_OF_GAME = False
-    if first_player == "Player":
-        move = get_input(f"Enter your move ({MOVES_REMAINING}): ", MOVES_REMAINING)
-        update_board(move, player_symbol)
-    else:
-        computer_move(computer_symbol)
-    check_win()
-    if WHO_WON["have_won"]:
-        print(f"{WHO_WON['winner']} has won the game!")
+            computer_move(computer_symbol)
+        check_win()
+        if WHO_WON["have_won"]:
+            print(f"{WHO_WON['winner']} has won the game!")
 
 
 if __name__ == "__main__":
