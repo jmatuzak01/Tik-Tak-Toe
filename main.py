@@ -3,6 +3,7 @@ os.system("clear")
 START_OF_GAME = True
 VALID_MOVES = [int(i) for i in range(1, 10)]
 MOVES_REMAINING = copy.deepcopy(VALID_MOVES)
+COMPUTER_MOVE = {"move": 0, "score": 0}
 VALID_SYMBOLS = ["X", "O", "x", "o"]
 START_BOARD = [
     ['1', '2', '3'],
@@ -49,46 +50,67 @@ def format_board(board):
         formatted_board += " | ".join(row) + "\n"
     return formatted_board
 
-def update_board(move:int, symbol:str):
-    #os.system("clear")
-    global TURN_COUNTER, GAME_BOARD, MOVES_REMAINING
-    for row in GAME_BOARD:
+def update_board(move:int, symbol:str, board=None, is_temp:bool=False):
+    global TURN_COUNTER, MOVES_REMAINING
+    if board is None:
+        board = GAME_BOARD
+    for row in board:
         for i in range(len(row)):
             if row[i] == str(move):
                 row[i] = symbol
-    print(format_board(GAME_BOARD))
-    MOVES_REMAINING.remove(int(move))
-    print(f"{symbol} was placed in position {move}.")
-    TURN_COUNTER += 1
+    if not is_temp:
+        print(format_board(board))
+        MOVES_REMAINING.remove(int(move))
+        print(f"{symbol} was placed in position {move}.")
+        TURN_COUNTER += 1
 
-def computer_move(computer_symbol):
-    # Placeholder for computer move logic
-    random_move = random.choice(MOVES_REMAINING)
-    update_board(random_move, computer_symbol)
+def computer_move(computer_symbol:str, player_symbol:str):
+    # Priority 1: win if possible
+    for move in MOVES_REMAINING:
+        temp_board = copy.deepcopy(GAME_BOARD)
+        update_board(move, computer_symbol, temp_board, is_temp=True)
+        if check_win(computer_symbol, temp_board):
+            update_board(move, computer_symbol)
+            return
 
-def check_win_row(board):
+    # Priority 2: block player from winning
+    for move in MOVES_REMAINING:
+        temp_board = copy.deepcopy(GAME_BOARD)
+        update_board(move, player_symbol, temp_board, is_temp=True)
+        if check_win(player_symbol, temp_board):
+            update_board(move, computer_symbol)
+            return
+
+    # Priority 3: fallback to random
+    update_board(random.choice(MOVES_REMAINING), computer_symbol)
+
+def check_win_row(symbol,board):
     global WHO_WON
     for row in board:
-        if len(set(row)) == 1 and row[0] in VALID_SYMBOLS:
-            set_winner(row[0])
+        if len(set(row)) == 1 and row[0] == symbol:
+            if board is GAME_BOARD:
+                set_winner(row[0])
             return True
     return False
 
-def check_win_column(board):
+def check_win_column(symbol,board):
     global WHO_WON
     for i in range(len(board[0])):
-        if board[0][i] == board[1][i] == board[2][i] and board[0][i] in VALID_SYMBOLS:
-            set_winner(board[0][i])
+        if board[0][i] == board[1][i] == board[2][i] and board[0][i] == symbol:
+            if board is GAME_BOARD:
+                set_winner(board[0][i])
             return True
     return False
 
-def check_win_diagonal(board):
+def check_win_diagonal(symbol,board):
     global WHO_WON
-    if board[0][0] == board[1][1] == board[2][2] and board[0][0] in VALID_SYMBOLS:
-        set_winner(board[0][0])
+    if board[0][0] == board[1][1] == board[2][2] and board[0][0] == symbol:
+        if board is GAME_BOARD:
+            set_winner(board[0][0])
         return True
-    elif board[0][2] == board[1][1] == board[2][0] and board[0][2] in VALID_SYMBOLS:
-        set_winner(board[0][2])
+    elif board[0][2] == board[1][1] == board[2][0] and board[0][2] == symbol:
+        if board is GAME_BOARD:
+            set_winner(board[0][2])
         return True
     return False
 
@@ -97,12 +119,10 @@ def set_winner(winner):
     WHO_WON["have_won"] = True
     WHO_WON["winner"] = winner
 
-def check_win():
-    global WHO_WON
-    winner = check_win_row(GAME_BOARD) or check_win_column(GAME_BOARD) or check_win_diagonal(GAME_BOARD)
-    if winner:
-        return True
-    return False
+def check_win(symbol:str, board=None):
+    if board is None:
+        board = GAME_BOARD
+    return check_win_row(symbol, board) or check_win_column(symbol, board) or check_win_diagonal(symbol, board)
 
 def check_draw():
     return True if not WHO_WON["have_won"] and len(MOVES_REMAINING) == 0 else False
@@ -116,6 +136,26 @@ def reset_game():
     TURN_COUNTER = 1
     os.system("clear")
 
+def end_of_game(player_symbol:str, computer_symbol:str):
+    global WHO_WON
+    if check_win(player_symbol):
+        print("You won!")
+        WHO_WON["have_won"] = True
+        WHO_WON["winner"] = player_symbol
+    elif check_win(computer_symbol):
+        print("Computer won!")
+        WHO_WON["have_won"] = True
+        WHO_WON["winner"] = computer_symbol
+    elif check_draw():
+        print("It's a draw!")
+        WHO_WON["have_won"] = True
+        WHO_WON["winner"] = None
+    if WHO_WON["have_won"]:
+        input("Press any key to play again...")
+        reset_game()
+        return True
+    return False
+    
 def main():
     first_player = None
     player_turn = None
@@ -135,28 +175,26 @@ def main():
                 update_board(move, player_symbol)
                 player_turn = False
             else:
-                computer_move(computer_symbol)
+                computer_move(computer_symbol, player_symbol)
                 player_turn = True
             START_OF_GAME = False
+            continue
 
-        #core game loop
-        if check_draw():
-            print("It's a draw!")
-            input("Press any key to play again...")
-            reset_game()
-        elif check_win():
-            print(f"{WHO_WON['winner']} has won the game!")
-            input("Press any key to play again...")
-            reset_game()
+        # core game loop
         else:
-            print(f"======== Turn {TURN_COUNTER} ========")
+            if end_of_game(player_symbol, computer_symbol):
+                continue
             if player_turn:
                 move = get_input_num(f"Enter your move ({MOVES_REMAINING}): ", MOVES_REMAINING)
                 update_board(move, player_symbol)
                 player_turn = False
+                if end_of_game(player_symbol, computer_symbol):
+                    continue
             else:
-                computer_move(computer_symbol)
+                computer_move(computer_symbol, player_symbol)
                 player_turn = True
+                if end_of_game(player_symbol, computer_symbol):
+                    continue
 
 if __name__ == "__main__":
     main()
